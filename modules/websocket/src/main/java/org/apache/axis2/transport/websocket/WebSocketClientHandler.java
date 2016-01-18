@@ -1,7 +1,6 @@
 package org.apache.axis2.transport.websocket;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import javax.xml.stream.XMLStreamException;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -15,6 +14,17 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.CharsetUtil;
+
+import org.apache.axiom.om.OMAbstractFactory;
+import org.apache.axiom.om.OMElement;
+import org.apache.axiom.om.util.AXIOMUtil;
+import org.apache.axiom.om.util.UUIDGenerator;
+import org.apache.axiom.soap.SOAPEnvelope;
+import org.apache.axiom.soap.SOAPFactory;
+import org.apache.axis2.context.MessageContext;
+import org.apache.axis2.engine.AxisEngine;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
     private final WebSocketClientHandshaker handshaker;
@@ -45,6 +55,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+        String responseMsg = null;
         Channel ch = ctx.channel();
         if (!handshaker.isHandshakeComplete()) {
             handshaker.finishHandshake(ch, (FullHttpResponse) msg);
@@ -63,15 +74,22 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         WebSocketFrame frame = (WebSocketFrame) msg;
         if (frame instanceof TextWebSocketFrame) {
             TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-            ch.writeAndFlush(textFrame);
+            responseMsg = textFrame.text();
             log.info("WebSocket Client received message: " + textFrame.text());
         } else if (frame instanceof PongWebSocketFrame) {
-            ch.writeAndFlush(frame);
             log.info("WebSocket Client received pong");
         } else if (frame instanceof CloseWebSocketFrame) {
             log.info("WebSocket Client received closing");
             ch.close();
         }
+
+        MessageContext responseMsgCtx = new MessageContext();
+        responseMsgCtx.setMessageID(UUIDGenerator.getUUID());
+        responseMsgCtx.setTo(null);
+        
+        responseMsgCtx.setEnvelope(createEnvelope(responseMsg));
+
+        AxisEngine.receive(responseMsgCtx);
     }
 
     @Override
@@ -81,6 +99,17 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             handshakeFuture.setFailure(cause);
         }
         ctx.close();
+    }
+
+    private SOAPEnvelope createEnvelope(String msg) throws XMLStreamException {
+        SOAPFactory fac = OMAbstractFactory.getSOAP11Factory();
+        SOAPEnvelope envelope = fac.getDefaultEnvelope();
+        OMElement websockElement = AXIOMUtil.stringToOM(msg);
+        org.apache.axiom.om.OMNamespace ns = fac.createOMNamespace("http://wso2.org/websocket", "wsoc");
+        OMElement messageEl = fac.createOMElement("message", ns);
+        messageEl.addChild(websockElement);
+        envelope.getBody().addChild(messageEl);
+        return envelope;
     }
 
 }
