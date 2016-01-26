@@ -1,7 +1,5 @@
 package org.apache.axis2.transport.websocket;
 
-import javax.xml.stream.XMLStreamException;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,13 +13,19 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.CharsetUtil;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.axiom.om.util.UUIDGenerator;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axiom.soap.SOAPFactory;
+import org.apache.axis2.AxisFault;
 import org.apache.axis2.context.MessageContext;
+import org.apache.axis2.context.OperationContext;
+import org.apache.axis2.context.ServiceContext;
+import org.apache.axis2.description.InOnlyAxisOperation;
 import org.apache.axis2.engine.AxisEngine;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -88,6 +92,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         responseMsgCtx.setTo(null);
         
         responseMsgCtx.setEnvelope(createEnvelope(responseMsg));
+        
+        setOperationAndServiceContext(responseMsgCtx);
 
         AxisEngine.receive(responseMsgCtx);
     }
@@ -110,6 +116,16 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         messageEl.addChild(websockElement);
         envelope.getBody().addChild(messageEl);
         return envelope;
+    }
+
+    private static void setOperationAndServiceContext(MessageContext axis2MsgCtx) throws AxisFault {
+        ServiceContext svcCtx = new ServiceContext();
+        OperationContext opCtx = new OperationContext(new InOnlyAxisOperation(), svcCtx);
+        axis2MsgCtx.setServiceContext(svcCtx);
+        axis2MsgCtx.setOperationContext(opCtx);
+        axis2MsgCtx.setProperty(org.apache.axis2.context.MessageContext.CLIENT_API_NON_BLOCKING,
+                                Boolean.FALSE);
+                        axis2MsgCtx.setServerSide(true);
     }
 
 }
