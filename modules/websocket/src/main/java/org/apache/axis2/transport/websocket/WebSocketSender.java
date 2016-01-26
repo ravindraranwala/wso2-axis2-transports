@@ -40,9 +40,9 @@ public class WebSocketSender extends AbstractTransportSender {
     public void sendMessage(MessageContext msgCtx, String targetEPR, OutTransportInfo trpOut)
                                                                                              throws AxisFault {
         try {
-            msgCtx.getConfigurationContext()
             OMOutputFormat format = BaseUtils.getOMOutputFormat(msgCtx);
             log.info("Fetching a Connection from the Connection Factory.");
+            connectionFactory.setConfigCtx(msgCtx.getConfigurationContext());
             Channel ch = connectionFactory.getConnection(new URI(targetEPR));
             MessageFormatter messageFormatter =
                                                 MessageProcessorSelector.getMessageFormatter(msgCtx);

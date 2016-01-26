@@ -123,7 +123,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         return envelope;
     }
 
-    private static void setOperationAndServiceContext(MessageContext axis2MsgCtx) throws AxisFault {
+    private void setOperationAndServiceContext(MessageContext axis2MsgCtx) throws AxisFault {
         ServiceContext svcCtx = new ServiceContext();
         OperationContext opCtx = new OperationContext(new InOnlyAxisOperation(), svcCtx);
         axis2MsgCtx.setServiceContext(svcCtx);
@@ -131,6 +131,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         axis2MsgCtx.setProperty(org.apache.axis2.context.MessageContext.CLIENT_API_NON_BLOCKING,
                                 Boolean.FALSE);
         axis2MsgCtx.setServerSide(true);
+        axis2MsgCtx.setConfigurationContext(configurationContext);
     }
 
     public void setConfigurationContext(ConfigurationContext configurationContext) {
