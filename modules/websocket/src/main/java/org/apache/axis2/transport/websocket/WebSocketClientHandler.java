@@ -22,6 +22,7 @@ import org.apache.axiom.om.util.UUIDGenerator;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axiom.soap.SOAPFactory;
 import org.apache.axis2.AxisFault;
+import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.context.OperationContext;
 import org.apache.axis2.context.ServiceContext;
@@ -34,6 +35,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     private final WebSocketClientHandshaker handshaker;
     private ChannelPromise handshakeFuture;
     private static final Log log = LogFactory.getLog(WebSocketClientHandler.class);
+
+    private ConfigurationContext configurationContext;
 
     public WebSocketClientHandler(WebSocketClientHandshaker handshaker) {
         this.handshaker = handshaker;
@@ -90,9 +93,9 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         MessageContext responseMsgCtx = new MessageContext();
         responseMsgCtx.setMessageID(UUIDGenerator.getUUID());
         responseMsgCtx.setTo(null);
-        
+
         responseMsgCtx.setEnvelope(createEnvelope(responseMsg));
-        
+
         setOperationAndServiceContext(responseMsgCtx);
 
         AxisEngine.receive(responseMsgCtx);
@@ -111,7 +114,9 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         SOAPFactory fac = OMAbstractFactory.getSOAP11Factory();
         SOAPEnvelope envelope = fac.getDefaultEnvelope();
         OMElement websockElement = AXIOMUtil.stringToOM(msg);
-        org.apache.axiom.om.OMNamespace ns = fac.createOMNamespace("http://wso2.org/websocket", "wsoc");
+        org.apache.axiom.om.OMNamespace ns =
+                                             fac.createOMNamespace("http://wso2.org/websocket",
+                                                                   "wsoc");
         OMElement messageEl = fac.createOMElement("message", ns);
         messageEl.addChild(websockElement);
         envelope.getBody().addChild(messageEl);
@@ -125,7 +130,11 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         axis2MsgCtx.setOperationContext(opCtx);
         axis2MsgCtx.setProperty(org.apache.axis2.context.MessageContext.CLIENT_API_NON_BLOCKING,
                                 Boolean.FALSE);
-                        axis2MsgCtx.setServerSide(true);
+        axis2MsgCtx.setServerSide(true);
+    }
+
+    public void setConfigurationContext(ConfigurationContext configurationContext) {
+        this.configurationContext = configurationContext;
     }
 
 }

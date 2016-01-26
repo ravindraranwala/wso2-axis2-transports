@@ -1,7 +1,5 @@
 package org.apache.axis2.transport.websocket;
 
-import java.net.URI;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -18,11 +16,13 @@ import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 
+import java.net.URI;
+
 import javax.net.ssl.SSLException;
 import javax.xml.namespace.QName;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.axis2.context.MessageContext;
+import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.description.TransportOutDescription;
 import org.apache.commons.logging.Log;
@@ -32,6 +32,7 @@ public class WebsocketConnectionFactory {
     private static final Log log = LogFactory.getLog(WebsocketConnectionFactory.class);
 
     private final TransportOutDescription transportOut;
+    private ConfigurationContext configCtx;
 
     public WebsocketConnectionFactory(TransportOutDescription transportOut) {
         super();
@@ -104,6 +105,7 @@ public class WebsocketConnectionFactory {
                                                                                                                              null,
                                                                                                                              false,
                                                                                                                              new DefaultHttpHeaders()));
+            handler.setConfigurationContext(configCtx);
             Bootstrap b = new Bootstrap();
             b.group(group).channel(NioSocketChannel.class)
              .handler(new ChannelInitializer<SocketChannel>() {
@@ -129,6 +131,10 @@ public class WebsocketConnectionFactory {
         }
 
         return ch;
+    }
+
+    public void setConfigCtx(ConfigurationContext configCtx) {
+        this.configCtx = configCtx;
     }
 
 }
