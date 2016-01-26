@@ -42,7 +42,10 @@ public class WebSocketSender extends AbstractTransportSender {
         try {
             OMOutputFormat format = BaseUtils.getOMOutputFormat(msgCtx);
             log.info("Fetching a Connection from the Connection Factory.");
-            connectionFactory.setConfigCtx(msgCtx.getConfigurationContext());
+            
+            MessageContext clonedCtx = WebSocketUtil.cloneAxis2MessageContext(msgCtx, false);
+            connectionFactory.setClonedMsgCtx(clonedCtx);
+            
             Channel ch = connectionFactory.getConnection(new URI(targetEPR));
             MessageFormatter messageFormatter =
                                                 MessageProcessorSelector.getMessageFormatter(msgCtx);

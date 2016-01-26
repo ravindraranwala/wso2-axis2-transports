@@ -22,7 +22,7 @@ import javax.net.ssl.SSLException;
 import javax.xml.namespace.QName;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.axis2.context.ConfigurationContext;
+import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.description.TransportOutDescription;
 import org.apache.commons.logging.Log;
@@ -32,7 +32,8 @@ public class WebsocketConnectionFactory {
     private static final Log log = LogFactory.getLog(WebsocketConnectionFactory.class);
 
     private final TransportOutDescription transportOut;
-    private ConfigurationContext configCtx;
+    
+    private MessageContext clonedMsgCtx;
 
     public WebsocketConnectionFactory(TransportOutDescription transportOut) {
         super();
@@ -105,7 +106,8 @@ public class WebsocketConnectionFactory {
                                                                                                                              null,
                                                                                                                              false,
                                                                                                                              new DefaultHttpHeaders()));
-            handler.setConfigurationContext(configCtx);
+            
+            handler.setResponseMsgCtx(clonedMsgCtx);
             Bootstrap b = new Bootstrap();
             b.group(group).channel(NioSocketChannel.class)
              .handler(new ChannelInitializer<SocketChannel>() {
@@ -133,8 +135,8 @@ public class WebsocketConnectionFactory {
         return ch;
     }
 
-    public void setConfigCtx(ConfigurationContext configCtx) {
-        this.configCtx = configCtx;
+    public void setClonedMsgCtx(MessageContext clonedMsgCtx) {
+        this.clonedMsgCtx = clonedMsgCtx;
     }
 
 }

@@ -18,11 +18,9 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
-import org.apache.axiom.om.util.UUIDGenerator;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axiom.soap.SOAPFactory;
 import org.apache.axis2.AxisFault;
-import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.context.OperationContext;
 import org.apache.axis2.context.ServiceContext;
@@ -36,7 +34,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     private ChannelPromise handshakeFuture;
     private static final Log log = LogFactory.getLog(WebSocketClientHandler.class);
 
-    private ConfigurationContext configurationContext;
+    private MessageContext responseMsgCtx;
 
     public WebSocketClientHandler(WebSocketClientHandshaker handshaker) {
         this.handshaker = handshaker;
@@ -90,13 +88,11 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             ch.close();
         }
 
-        MessageContext responseMsgCtx = new MessageContext();
-        responseMsgCtx.setMessageID(UUIDGenerator.getUUID());
-        responseMsgCtx.setTo(null);
+        // MessageContext responseMsgCtx = new MessageContext();
+        // responseMsgCtx.setMessageID(UUIDGenerator.getUUID());
+        // responseMsgCtx.setTo(null);
 
         responseMsgCtx.setEnvelope(createEnvelope(responseMsg));
-
-        setOperationAndServiceContext(responseMsgCtx);
 
         AxisEngine.receive(responseMsgCtx);
     }
@@ -131,11 +127,10 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         axis2MsgCtx.setProperty(org.apache.axis2.context.MessageContext.CLIENT_API_NON_BLOCKING,
                                 Boolean.FALSE);
         axis2MsgCtx.setServerSide(true);
-        axis2MsgCtx.setConfigurationContext(configurationContext);
     }
 
-    public void setConfigurationContext(ConfigurationContext configurationContext) {
-        this.configurationContext = configurationContext;
+    public void setResponseMsgCtx(MessageContext responseMsgCtx) {
+        this.responseMsgCtx = responseMsgCtx;
     }
 
 }
