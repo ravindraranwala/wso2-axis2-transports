@@ -22,7 +22,10 @@ import javax.net.ssl.SSLException;
 import javax.xml.namespace.QName;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.axis2.context.MessageContext;
+import org.apache.axis2.context.ConfigurationContext;
+import org.apache.axis2.context.ServiceContext;
+import org.apache.axis2.description.AxisOperation;
+import org.apache.axis2.description.AxisService;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.description.TransportOutDescription;
 import org.apache.commons.logging.Log;
@@ -32,8 +35,13 @@ public class WebsocketConnectionFactory {
     private static final Log log = LogFactory.getLog(WebsocketConnectionFactory.class);
 
     private final TransportOutDescription transportOut;
-    
-    private MessageContext clonedMsgCtx;
+
+    private AxisService axisService;
+    private ServiceContext serviceContext;
+    private AxisOperation axisOperation;
+    private Object isInbound;
+    private Object sender;
+    private ConfigurationContext configCtx;
 
     public WebsocketConnectionFactory(TransportOutDescription transportOut) {
         super();
@@ -106,8 +114,12 @@ public class WebsocketConnectionFactory {
                                                                                                                              null,
                                                                                                                              false,
                                                                                                                              new DefaultHttpHeaders()));
-            
-            handler.setResponseMsgCtx(clonedMsgCtx);
+
+            handler.setAxisService(axisService);
+            handler.setServiceContext(serviceContext);
+            handler.setAxisOperation(axisOperation);
+            handler.setIsInbound(isInbound);
+            handler.setSender(sender);
             Bootstrap b = new Bootstrap();
             b.group(group).channel(NioSocketChannel.class)
              .handler(new ChannelInitializer<SocketChannel>() {
@@ -129,14 +141,34 @@ public class WebsocketConnectionFactory {
         } catch (SSLException e) {
             log.error("Error occurred while building the SSL context", e);
         } finally {
-            group.shutdownGracefully();
+            // group.shutdownGracefully();
         }
 
         return ch;
     }
 
-    public void setClonedMsgCtx(MessageContext clonedMsgCtx) {
-        this.clonedMsgCtx = clonedMsgCtx;
+    public void setAxisService(AxisService axisService) {
+        this.axisService = axisService;
+    }
+
+    public void setServiceContext(ServiceContext serviceContext) {
+        this.serviceContext = serviceContext;
+    }
+
+    public void setAxisOperation(AxisOperation axisOperation) {
+        this.axisOperation = axisOperation;
+    }
+
+    public void setIsInbound(Object isInbound) {
+        this.isInbound = isInbound;
+    }
+
+    public void setSender(Object sender) {
+        this.sender = sender;
+    }
+
+    public void setConfigCtx(ConfigurationContext configCtx) {
+        this.configCtx = configCtx;
     }
 
 }

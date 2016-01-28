@@ -43,8 +43,16 @@ public class WebSocketSender extends AbstractTransportSender {
             OMOutputFormat format = BaseUtils.getOMOutputFormat(msgCtx);
             log.info("Fetching a Connection from the Connection Factory.");
             
-            MessageContext clonedCtx = WebSocketUtil.cloneAxis2MessageContext(msgCtx, false);
-            connectionFactory.setClonedMsgCtx(clonedCtx);
+            // MessageContext clonedCtx =
+            // WebSocketUtil.cloneAxis2MessageContext(msgCtx, false);
+            // connectionFactory.setClonedMsgCtx(clonedCtx);
+            
+            connectionFactory.setConfigCtx(msgCtx.getConfigurationContext());
+            connectionFactory.setAxisService(msgCtx.getAxisService());
+            connectionFactory.setServiceContext(msgCtx.getServiceContext());
+            connectionFactory.setAxisOperation(msgCtx.getAxisOperation());
+            connectionFactory.setSender(msgCtx.getProperty("inbound-response-worker"));
+            connectionFactory.setIsInbound(msgCtx.getProperty("isInbound"));
             
             Channel ch = connectionFactory.getConnection(new URI(targetEPR));
             MessageFormatter messageFormatter =

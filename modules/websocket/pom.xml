@@ -29,6 +29,7 @@
     </parent>
 
     <artifactId>axis2-transport-web-socket</artifactId>
+    <version>1.1.1-wso2v1</version>
     <name>Apache Axis2 - Transport - Web socket</name>
     <description>Apache Axis2 - Web socket Transport</description>
     <packaging>bundle</packaging>
